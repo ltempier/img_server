@@ -1,0 +1,30 @@
+
+.image-row {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+    padding-bottom: 1.25rem;
+    margin-bottom: 1.25rem;
+}
+
+.image-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0px;
+    margin-bottom: 0px;
+}
+
+.image-row img {
+    height: 200px;
+}
+
+.image-row p {
+    margin: 0;
+}
+
+.image-row .media-body {
+    height: 100%;
+    position: relative;
+}
+
+.image-row .image-action {
+    bottom: 0;
+    position: absolute;
+}

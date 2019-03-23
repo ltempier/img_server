@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Image Upload</title>
+
+    <link rel="stylesheet" type="text/css" href="./bootstrap4-wizardry.css"/>
+    <link rel="stylesheet" type="text/css" href="style.css"/>
+</head>
+<body>
+
+<div class="container mt-5">
+
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card mb-3 text-center bg-danger text-white">
+                <div class="card-body">
+                    <h1>WARNING: Old version - no react</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+
+            <div class="card">
+                <div class="card-header text-center">
+                    Upload images
+                </div>
+
+                <div class="card-body">
+
+                    <div id="files" class="col-12"></div>
+                </div>
+
+                <div class="card-footer text-muted">
+
+
+                    <button class="btn btn-primary" onclick="$('#fileupload').click()">Add +</button>
+                    <input id="fileupload" class="invisible" type="file" multiple>
+
+                    <button id="submit" class="btn btn-outline-primary float-right">Upload</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+</div>
+
+
+<script src="jquery.js"></script>
+<script src="script.js"></script>
+
+</body>
+</html>

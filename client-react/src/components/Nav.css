@@ -1,0 +1,35 @@
+
+.navbar-toggler {
+    overflow: hidden;
+}
+
+.navbar-toggler .icon-bar {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background-color: #cccccc;
+
+    border-radius: 1px;
+    margin: 4px 0px;
+
+    transition: opacity, transform;
+    transition-duration: 200ms;
+    transition-timing-function: cubic-bezier(0.7, 0, 0, 0.7);
+}
+
+.navbar-dark .navbar-toggler .icon-bar {
+    background-color: white;
+}
+
+.navbar-toggler:not(.collapsed) .icon-bar:nth-child(1) {
+    transform: translateY(6px) rotate(45deg);
+}
+
+.navbar-toggler:not(.collapsed) .icon-bar:nth-child(2) {
+    opacity: 0;
+    transform: translateX(-100%);
+}
+
+.navbar-toggler:not(.collapsed) .icon-bar:nth-child(3) {
+    transform: translateY(-6px) rotate(-45deg);
+}
