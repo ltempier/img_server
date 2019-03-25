@@ -66,14 +66,6 @@ class Store {
         this.images[hash] = image
     }
 
-    appendImage(hash, image) {
-        this.images[hash] = image
-    }
-
-    appendFile(hash, key, file) {
-        this.images[hash].files[key] = file
-    }
-
     all() {
         return Object.values(this.images)
     }

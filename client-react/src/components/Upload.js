@@ -9,15 +9,19 @@ class Upload extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            images: storeImages || []
+            images: storeImages || [],
+            sizes: [2000]
         };
 
         this.fileUploadRef = React.createRef();
+        this.inputSizeRef = React.createRef();
 
         this.onFileChange = this.onFileChange.bind(this);
         this.delete = this.delete.bind(this);
         this.upload = this.upload.bind(this);
-        this.uploadAll = this.uploadAll.bind(this)
+        this.uploadAll = this.uploadAll.bind(this);
+        this.addSize = this.addSize.bind(this);
+        this.removeSize = this.removeSize.bind(this)
     }
 
     componentWillUnmount() {
@@ -43,14 +47,17 @@ class Upload extends Component {
     update(imageId, updImage, replace) {
         let idx = this.indexOf(imageId);
         if (idx < 0)
-            return;
+            return Promise.reject(`image not found, image.id: ${imageId}`);
 
-        this.setState((state) => {
+        return this.setState((state) => {
             let images = [...state.images];
             if (replace === true)
                 images[idx] = updImage;
             else
-                images[idx] = {...images[idx], ...updImage};
+                images[idx] = {
+                    ...images[idx],
+                    ...updImage
+                };
 
             return {
                 ...state,
@@ -60,75 +67,70 @@ class Upload extends Component {
     }
 
     upload(imageId) {
-        let idx = this.indexOf(imageId);
-        if (idx < 0)
-            return;
+        return new Promise((resolve, reject) => {
 
-        this.update(imageId, {status: 'Uploading ...'});
+            let idx = this.indexOf(imageId);
+            if (idx < 0)
+                return resolve();
 
-        const image = this.state.images[idx];
-        fetch(image.uri)
-            .then(response => response.blob())
-            .then((blob) => {
-                let formData = new FormData();
-                formData.append('image', blob, image.name);
-
-                fetch('/images', {
-                    method: 'POST',
-                    body: formData
-                }).then((response) => {
-                    return response.json();
-                }).then((response) => {
-                    this.update(imageId, {status: 'Uploaded', isUploaded: true});
-                    console.log('success', response);
-                }).catch((error) => {
-                    this.update(imageId, {status: 'error 2'});
-                    console.log('error', error)
-                });
-            })
-            .catch((error) => {
-                this.update(imageId, {status: 'error 1'});
-                console.log('error', error)
+            this.update(imageId, {
+                status: 'Uploading ...',
+                hideUploadBtn: true,
+                hideRemoveBtn: true
             });
+
+            const image = this.state.images[idx];
+            fetch(image.uri)
+                .then(response => response.blob())
+                .then((blob) => {
+                    let formData = new FormData();
+                    formData.append('image', blob, image.name);
+
+                    const url = '/images?sizes=' + encodeURIComponent(this.state.sizes.join(','));
+                    fetch(url, {
+                        method: 'POST',
+                        body: formData
+                    }).then((response) => {
+                        return response.json();
+                    }).then((response) => {
+                        console.log('success', response);
+                        return this.update(imageId, {
+                            ...response[0],
+                            status: 'Uploaded',
+                            hideUploadBtn: true,
+                            hideRemoveBtn: true
+                        });
+                    }).then((response) => {
+                        resolve(response)
+                    }).catch((error) => {
+                        this.update(imageId, {
+                            status: 'error 2',
+                            hideUploadBtn: false,
+                            hideRemoveBtn: false
+                        });
+                        console.log('error 2', error);
+                        reject(error)
+                    });
+                })
+                .catch((error) => {
+                    this.update(imageId, {
+                        status: 'error 1',
+                        hideUploadBtn: false,
+                        hideRemoveBtn: false
+                    });
+                    console.log('error 1', error);
+                    reject(error)
+                });
+        })
+
+
     }
 
     uploadAll() {
-
-        let formData = new FormData();
-        let images = this.state.images;
-
-        fillFormData()
-            .then(() => {
-                images.forEach((image) => {
-                    this.update(image.id, {status: 'Uploading ALL ...'});
-                });
-                return Promise.resolve();
-            })
-            .then(() => {
-                fetch('/images', {
-                    method: 'POST',
-                    body: formData
-                }).then((response) => {
-                    return response.json();
-                }).then((response) => {
-                    images.forEach((image) => {
-                        this.update(image.id, {status: 'Uploaded ALL'});
-                    });
-                    console.log('success', response);
-                }).catch((error) => {
-                    console.log('error', error)
-                });
-            });
-
-        async function fillFormData() {
-            await Promise.all(images.map(async (image) => {
-                await fetch(image.uri)
-                    .then(response => response.blob())
-                    .then((blob) => {
-                        formData.append('image', blob, image.name);
-                    })
-            }));
-        }
+        this.state.images.reduce(async (previousPromise, image) => {
+            await previousPromise;
+            return this.upload(image.id);
+        }, Promise.resolve());
     }
 
     delete(imageId) {
@@ -147,9 +149,6 @@ class Upload extends Component {
     }
 
     onFileChange(e) {
-
-        // console.log('onFileChange', e.target)
-
         const length = (e && e.target && e.target.files && e.target.files.length) ? e.target.files.length : 0;
         for (let i = 0; i < length; i++) {
             const image = e.target.files[i];
@@ -161,58 +160,139 @@ class Upload extends Component {
                 this.setState((state) => {
                     return {
                         ...state,
-                        images: [...state.images, {
+                        images: [{
                             id: imageId,
                             name: image.name,
                             size: image.size,
-                            type: image.type,
-                            lastModified: image.lastModified,
-                            lastModifiedDate: image.lastModifiedDate,
-                            uri: URL.createObjectURL(image)
-                        }]
+                            // type: image.type,
+                            // lastModified: image.lastModified,
+                            // lastModifiedDate: image.lastModifiedDate,
+                            uri: URL.createObjectURL(image),
+                            status: 'not processed'
+                        }, ...state.images]
                     }
                 })
             }
         }
     }
 
+    addSize() {
+        try {
+            const newSize = parseInt(this.inputSizeRef.current.value);
+            if (this.state.sizes.indexOf(newSize) < 0 && newSize > 0) {
+                this.setState((state) => {
+                    return {
+                        ...state,
+                        sizes: [
+                            ...state.sizes,
+                            newSize
+                        ]
+                    }
+                });
+
+                this.state.images.forEach((image) => {
+                    if (image.files) {
+                        let canUpload = image.files.some((file) => {
+                            return file.id === newSize + 'kb'
+                        });
+                        if (!canUpload)
+                            this.update(image.id, {hideUploadBtn: false})
+                    }
+                })
+            }
+
+
+        } catch (e) {
+
+        }
+    }
+
+    removeSize(index) {
+        const sizes = this.state.sizes.splice(index, 1);
+        this.setState(sizes)
+    }
+
     render() {
 
         return (
 
-            <div className="container mt-5">
+            <div className="container mt-3">
+                <div className="card mb-3">
+                    <div className="card-body">
+
+                        <div className="row">
+
+                            <div className="col-2">
+                                <button className="btn btn-primary"
+                                        onClick={() => this.fileUploadRef.current.click()}>+ Add File
+                                </button>
+
+                                <input ref={this.fileUploadRef}
+                                       hidden={true}
+                                       type="file" multiple
+                                       onChange={this.onFileChange}/>
+                            </div>
+
+
+                            <div className="col-3">
+                                <div className="input-group">
+                                    <input ref={this.inputSizeRef}
+                                           type="number"
+                                           step={100}
+                                           min={0}
+                                           className="form-control"
+                                           placeholder="Size in kb"
+                                    />
+                                    <div className="input-group-append">
+                                        <button className="btn btn-outline-primary"
+                                                type="button"
+                                                onClick={this.addSize}
+                                        >+ Add Size
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="col-5">
+                                {
+                                    this.state.sizes.map((size, idx) => {
+                                        return (
+                                            <button
+                                                key={'size_' + idx}
+                                                className="btn btn-dark mr-1"
+                                                onClick={() => this.removeSize(idx)}>{size}kb</button>
+                                        )
+                                    })
+                                }
+                            </div>
+
+                            <div className="col-2">
+                                <button className="btn btn-outline-primary float-right"
+                                        onClick={this.uploadAll}>Upload All
+                                </button>
+                            </div>
+
+
+                        </div>
+                    </div>
+                </div>
+
 
                 <div id="files" className="col-12">
                     {
-                        this.state.images.map((image, key) => {
+                        this.state.images.map((image, idx) => {
                             return (
                                 <ImageRow {...image}
                                           src={image.uri}
-                                          key={key}
+                                          key={'image_' + idx}
 
-                                          onDeleteClick={() => this.delete(image.id)}
+                                          onRemoveClick={() => this.delete(image.id)}
                                           onUploadClick={() => this.upload(image.id)}
-                                >
-                                </ImageRow>
+                                />
                             )
                         })
                     }
                 </div>
-
-                <div className="text-muted mt-5">
-                    <button className="btn btn-primary"
-                            onClick={() => this.fileUploadRef.current.click()}>Add +
-                    </button>
-                    <input ref={this.fileUploadRef}
-                           className="invisible"
-                           type="file" multiple
-                           onChange={this.onFileChange}/>
-
-                    <button className="btn btn-outline-primary float-right"
-                            onClick={this.uploadAll}>Upload
-                    </button>
-                </div>
-
             </div>
         );
     }

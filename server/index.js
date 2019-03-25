@@ -9,6 +9,7 @@ const morgan = require('morgan');
 const path = require('path');
 const multer = require('multer');
 const async = require('async');
+const urlLib = require('url');
 
 const config = require('./config');
 
@@ -28,26 +29,21 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(morgan(":date[iso] - :method :url :status - :response-time ms"));
 
-app.use(express.static(path.resolve(__dirname, '..', 'client')));
-app.use('/node_modules', express.static(path.resolve(__dirname, '..', 'node_modules')));
+app.use(express.static(path.resolve(__dirname, '..', 'client-react', 'build')));
 
 const upload = multer({
-    dest: config.dirTmpPath
+    dest: config.dirTmpPath,
     // fileFilter: function (req, file, cb) {
+    // TODO filter -> only image files
     //     cb(null, true)
     // }
 });
 
-app.post('/images', upload.any(), function (req, res) {
-    console.log('req.files:', req.files);
-
+app.post('/images', upload.any(), function (req, res, next) {
     req.files = req.files || [];
-
-    const resizeParams = [
-        {name: 'large', kb: 2000},
-        {name: 'medium', kb: 1400},
-        {name: 'small', kb: 800},
-    ];
+    req.query.sizes = (req.query.sizes || "").split(",").map((size) => parseInt(size));
+    next()
+}, function (req, res) {
 
     let response = [];
 
@@ -68,12 +64,10 @@ app.post('/images', upload.any(), function (req, res) {
 
                 async.series({
                     convert: function (cb) {
-
-                        async.eachLimit(resizeParams, 3, (params, nextSize) => {
-                            if (tmpFile.size < params.kb * 1000)
+                        async.eachLimit(req.query.sizes, 3, (sizeKb, nextSize) => {
+                            if (tmpFile.size <= sizeKb * 1000)
                                 return nextSize();
-
-                            image.convert(tmpFile, params, nextSize)
+                            image.convert(tmpFile, sizeKb, nextSize)
                         }, cb)
                     },
                     move: function (cb) {
@@ -100,7 +94,6 @@ app.post('/images', upload.any(), function (req, res) {
             }]
         }, nextFile)
     }, function (err) {
-        // console.log('post end', ...arguments);
         if (err)
             res.status(500).json(err);
         else if (req.files.length === 0)
@@ -111,39 +104,69 @@ app.post('/images', upload.any(), function (req, res) {
     })
 });
 
-app.get('/images/:hash', function (req, res) {
-
+app.get('/images/:hash', checkRedirect, function (req, res) {
     const tree = new Tree();
     const image = tree.get(req.params.hash);
-
     if (image)
-        res.download(image.files.original.path, image.originalName);
+        res.redirect(urlLib.format({
+            pathname: '/images/' + req.params.hash + '/original/',
+            query: req.query
+        }));
     else
         res.status(404).send('Not Found')
 });
 
-app.get('/images/:hash/:size', function (req, res) {
-    const tree = new Tree();
-    const image = tree.get(req.params.hash);
-    if (image && image.files[req.params.size])
-        res.redirect('/images/' + req.params.hash + '/' + req.params.size + '/' + image.files[req.params.size].name);
-    else if (image)
-        res.redirect('/images/' + req.params.hash);
-    else
-        res.status(404).send('Not Found')
-});
-
-app.get('/images/:hash/:size/:name', function (req, res) {
+app.get('/images/:hash/:size', checkRedirect, function (req, res) {
     const tree = new Tree();
     const image = tree.get(req.params.hash);
 
-    if (image && image.files[req.params.size])
-        res.download(image.files[req.params.size].path, image.originalName);
-    else if (image)
-        res.redirect('/images/' + req.params.hash);
+    if (image) {
+        if (image.files[req.params.size])
+            res.redirect(urlLib.format({
+                pathname: '/images/' + req.params.hash + '/' + req.params.size + '/' + image.files[req.params.size].name,
+                query: req.query
+            }));
+        else
+            res.redirect(urlLib.format({
+                pathname: '/images/' + req.params.hash + '/original/' + image.originalName,
+                query: req.query
+            }));
+    }
     else
         res.status(404).send('Not Found')
 });
+
+app.get('/images/:hash/:size/:name', checkRedirect, function (req, res) {
+    const tree = new Tree();
+    const image = tree.get(req.params.hash);
+
+    if (image) {
+        if (image.files[req.params.size])
+            res.download(image.files[req.params.size].path, image.originalName);
+        else
+            res.redirect(urlLib.format({
+                pathname: '/images/' + req.params.hash + '/original/' + image.originalName,
+                query: req.query
+            }));
+    }
+    else
+        res.status(404).send('Not Found')
+});
+
+function checkRedirect(req, res, next) {
+    try {
+        req.query.redirect = parseInt(req.query.redirect || 0)
+    } catch (e) {
+        req.query.redirect = 0
+    }
+
+    if (req.query.redirect > 2)
+        return res.status(500).send('Too many redirection');
+
+    req.query.redirect += 1;
+    next()
+}
+
 
 const api = express.Router();
 api.use(function (req, res, next) {
@@ -170,6 +193,10 @@ api.get(Image.getUrl(':hash'), function (req, res) {
 });
 
 app.use('/api', api);
+
+app.get('*', (req, res) => {
+    res.sendFile(path.resolve(__dirname, '..', 'client-react', 'build', 'index.html'));
+});
 
 app.listen(process.env.PORT, process.env.IP, function (err) {
     if (err)

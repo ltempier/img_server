@@ -32,18 +32,18 @@ class Browse extends Component {
                 {
                     this.state.images.map((image, idx) => {
 
-                        // const files = image.files;
-                        // const keys = Object.keys(files);
-                        // const url = [image.url, keys[0]].join('/');
-
                         return (
                             <ImageRow
+                                key={idx}
+
                                 {...image}
                                 alt={image.originalName}
                                 name={image.originalName}
                                 files={image.files}
-                                key={idx}
-                                isUploaded={true}
+
+                                hideUploadBtn={true}
+                                hideRemoveBtn={true}
+                                status=""
                             />
                         )
 

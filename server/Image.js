@@ -24,30 +24,34 @@ class Image {
 
 
     toJSON() {
-        // let files = [];
-        // for (const key in this.files) {
-        //     const jsonFile = this.files[key].toJSON();
-        //     jsonFile.url = Image.getUrl(this.hash, key);
-        //     jsonFile.key = key;
-        //     files.push(jsonFile)
-        // }
-        // files = files.sort((f1, f2) => f1.size - f2.size);
+
+        const url = Image.getUrl(this.hash);
+        const files = Object.keys(this.files).map((sizeKb) => {
+            const file = this.files[sizeKb];
+            return {
+                ...file.toJSON(),
+                id: sizeKb,
+                url: Image.getUrl(this.hash, sizeKb, file.name)
+            }
+        }).sort(function (a, b) {
+            return a.size - b.size;
+        });
 
         return {
             hash: this.hash,
             originalName: this.originalName,
-            files: this.files,
-            url: Image.getUrl(this.hash)
+            url,
+            files
         }
     }
 
-    convert(from, params, callback) {
+    convert(from, sizeKb, callback) {
 
         if (!this.hash)
             return callback(new Error('no hash'));
 
         const dirPath = path.join(config.dirFilePath, this.hash);
-        const filename = path.join(params.kb + 'kb_' + this.originalName);
+        const filename = path.join(sizeKb + 'kb_' + this.originalName); //WARNING: check Tree.loadHash regex
 
         const filepath = path.join(dirPath, filename);
 
@@ -55,7 +59,7 @@ class Image {
             name: filename,
             path: filepath,
             mimetype: 'image/jpeg',
-            size: params.kb * 1000
+            size: sizeKb * 1000
         });
 
         async.auto({
@@ -67,14 +71,14 @@ class Image {
 
                 im.convert([
                         from.path,
-                        '-define', 'jpeg:extent=' + params.kb + 'kb',
+                        '-define', 'jpeg:extent=' + sizeKb + 'kb',
                         filepath
                     ],
                     (err) => {
                         if (err)
                             cb(err);
                         else {
-                            // console.log('resize', from.name, 'size (Mb):', (from.size / 1000000).toFixed(2), '->', (params.kb / 1000000).toFixed(2));
+                            // console.log('resize', from.name, 'size (Mb):', (from.size / 1000000).toFixed(2), '->', (sizeKb / 1000000).toFixed(2));
                             cb(null, true);
                         }
                     })
@@ -85,7 +89,7 @@ class Image {
             if (err)
                 callback(err);
             else {
-                this.files[params.kb] = (file);
+                this.files[sizeKb] = (file);
                 callback(null, file)
             }
         })
