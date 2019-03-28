@@ -116,25 +116,35 @@ app.get('/images/:hash', checkRedirect, function (req, res) {
         res.status(404).send('Not Found')
 });
 
-app.get('/images/:hash/:size', checkRedirect, function (req, res) {
-    const tree = new Tree();
-    const image = tree.get(req.params.hash);
 
-    if (image) {
-        if (image.files[req.params.size])
-            res.redirect(urlLib.format({
-                pathname: '/images/' + req.params.hash + '/' + req.params.size + '/' + image.files[req.params.size].name,
-                query: req.query
-            }));
+app.route('/images/:hash/:size')
+    .get(checkRedirect, function (req, res) {
+        const tree = new Tree();
+        const image = tree.get(req.params.hash);
+
+        if (image) {
+            if (image.files[req.params.size])
+                res.redirect(urlLib.format({
+                    pathname: '/images/' + req.params.hash + '/' + req.params.size + '/' + image.files[req.params.size].name,
+                    query: req.query
+                }));
+            else
+                res.redirect(urlLib.format({
+                    pathname: '/images/' + req.params.hash + '/original/' + image.originalName,
+                    query: req.query
+                }));
+        }
         else
-            res.redirect(urlLib.format({
-                pathname: '/images/' + req.params.hash + '/original/' + image.originalName,
-                query: req.query
-            }));
-    }
-    else
-        res.status(404).send('Not Found')
-});
+            res.status(404).send('Not Found')
+    })
+    .delete(function (req, res) {
+        const tree = new Tree();
+        const done = tree.delete(req.params.hash, req.params.size);
+        if (done)
+            res.status(200).send('done');
+        else
+            res.status(404).send('Not Found')
+    });
 
 app.get('/images/:hash/:size/:name', checkRedirect, function (req, res) {
     const tree = new Tree();

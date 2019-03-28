@@ -11,7 +11,6 @@ class ImageRow extends Component {
         this.state = {
             fileIdx: 0
         }
-
     }
 
     copyToClipboard = (text) => {
@@ -21,7 +20,7 @@ class ImageRow extends Component {
         textField.select();
         document.execCommand('copy');
         textField.remove()
-    };
+    }
 
     render() {
 
@@ -35,37 +34,57 @@ class ImageRow extends Component {
             if (currentFile) {
                 const currentUrl = currentFile.url;
                 download = (
-                    <div className="card border-dark">
-                        <div className="card-body">
-                            <p>select file size: {
+
+                    <div className="">
+                        files:
+                        <ul className="nav nav-tabs">
+                            {
                                 this.props.files.map((file, fileIdx) => {
-                                    const isOriginal = (fileIdx === this.props.files.length - 1);
-                                    return <button
-                                        onClick={() => this.setState({fileIdx})}
-                                        key={[this.props.name, fileIdx].join('_')}
-                                        className={["btn btn-sm mr-1",
-                                            isOriginal ? "btn-outline-dark" : "btn-outline-primary",
-                                            fileIdx === this.state.fileIdx ? "active" : ""].join(" ")}
-                                    >{file.id}</button>
+
+                                    return <li className="nav-item " key={[this.props.name, fileIdx].join('_')}>
+                                        <a
+                                            onClick={() => this.setState({fileIdx})}
+                                            className={["nav-link",
+                                                fileIdx === this.state.fileIdx ? "active" : ""].join(" ")}
+                                            href="#!">{file.id}</a>
+                                    </li>
+
+                                    // const isOriginal = (fileIdx === this.props.files.length - 1);
+                                    // return <button
+                                    //     onClick={() => this.setState({fileIdx})}
+                                    //     key={[this.props.name, fileIdx].join('_')}
+                                    //     className={["btn btn-sm mr-1",
+                                    //         isOriginal ? "btn-outline-dark" : "btn-outline-primary",
+                                    //         fileIdx === this.state.fileIdx ? "active" : ""].join(" ")}
+                                    // >v</button>
                                 })
                             }
-                            </p>
-                            <p>
-                                filename: <strong>{currentFile.name}</strong>
-                            </p>
-                            <p>
-                                size: <strong>{ImageRow.formatSize(currentFile.size)}</strong>
-                            </p>
-                            <p>
-                                url: <a href={currentFile.url} download={currentFile.name}>{currentUrl}</a>
-                            </p>
-                            <p>
-                                <button className="btn btn-sm btn-primary mr-1"
-                                        onClick={() => this.copyToClipboard(currentUrl)}>copy url
-                                </button>
-                                <button className="btn btn-sm btn-primary mr-1">download</button>
-                                <button className="btn btn-sm btn-primary">preview</button>
-                            </p>
+                        </ul>
+                        <div className="card border-top-0 radius-0">
+
+                            <div className="card-body">
+                                {/*<p>select file size: */}
+                                {/*</p>*/}
+
+
+                                <p>
+                                    filename: <strong>{currentFile.name}</strong>
+                                </p>
+                                <p>
+                                    size: <strong>{ImageRow.formatSize(currentFile.size)}</strong>
+                                </p>
+                                <p>
+                                    url: <a href={currentFile.url} download={currentFile.name}>{currentUrl}</a>
+                                </p>
+                                <p>
+                                    <button className="btn btn-sm btn-primary mr-1"
+                                            onClick={() => this.copyToClipboard(currentUrl)}>copy url
+                                    </button>
+                                    <button className="btn btn-sm btn-primary mr-1">download</button>
+                                    <button className="btn btn-sm btn-primary">preview</button>
+                                    <button className="btn btn-sm btn-primary">preview</button>
+                                </p>
+                            </div>
                         </div>
                     </div>
                 )
@@ -151,7 +170,8 @@ ImageRow.defaultProps = {
 
     files: [],
     onRemoveClick: () => console.log('onDeleteClick'),
-    onUploadClick: () => console.log('onUploadClick')
+    onUploadClick: () => console.log('onUploadClick'),
+    onDeleteFileClick: () => console.log('onDeleteFileClick')
 };
 
 export default ImageRow;

@@ -15,7 +15,6 @@ class Store {
         instance = this;
 
         this.images = {};
-
         this.load(true);
     }
 
@@ -72,6 +71,15 @@ class Store {
 
     get(hash) {
         return (this.images[hash] || null)
+    }
+
+    delete(hash, convert) {
+        if (this.images[hash] && this.images[hash].files && this.images[hash].files[convert]) {
+            fs.removeSync(this.images[hash].files[convert].path);
+            this.loadHash(hash);
+            return true
+        }
+        return false
     }
 }
 
