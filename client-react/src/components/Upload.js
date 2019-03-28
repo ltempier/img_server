@@ -76,7 +76,8 @@ class Upload extends Component {
             this.update(imageId, {
                 status: 'Uploading ...',
                 hideUploadBtn: true,
-                hideRemoveBtn: true
+                hideRemoveBtn: true,
+                hideDownloadDiv: false
             });
 
             const image = this.state.images[idx];
@@ -168,7 +169,8 @@ class Upload extends Component {
                             // lastModified: image.lastModified,
                             // lastModifiedDate: image.lastModifiedDate,
                             uri: URL.createObjectURL(image),
-                            status: 'not processed'
+                            status: 'not processed',
+                            hideDownloadDiv: true
                         }, ...state.images]
                     }
                 })
@@ -234,7 +236,7 @@ class Upload extends Component {
                             </div>
 
 
-                            <div className="col-3">
+                            <div className="col-2">
                                 <div className="input-group">
                                     <input ref={this.inputSizeRef}
                                            type="number"
@@ -247,13 +249,13 @@ class Upload extends Component {
                                         <button className="btn btn-outline-primary"
                                                 type="button"
                                                 onClick={this.addSize}
-                                        >+ Add Size
+                                        >+
                                         </button>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="col-5">
+                            <div className="col-6">
                                 {
                                     this.state.sizes.map((size, idx) => {
                                         return (

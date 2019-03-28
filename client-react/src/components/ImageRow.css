@@ -20,12 +20,12 @@
 }
 
 .image-row .media {
-    width: 100%;
+    /*width: 100%;*/
 }
 
 .image-row .media-body {
     height: 100%;
-    width: 100%;
+    /*width: 100%;*/
     position: relative;
 }
 

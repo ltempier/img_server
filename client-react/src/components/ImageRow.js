@@ -5,64 +5,90 @@ import './ImageRow.css'
 
 class ImageRow extends Component {
 
-    // render() {
-    //     if (this.props.isUploaded)
-    //         return this.renderUploaded();
-    //     return (
-    //         <div className="row image-row">
-    //             <div className="media">
-    //                 <img className="align-self-center mr-3" src={this.props.src} alt={this.props.alt}/>
-    //                 <div className="media-body ">
-    //
-    //                     <div className="image-info">
-    //                         <p>filename: <strong>{this.props.name}</strong></p>
-    //                         <p className="mt-1">status: <strong>{ImageRow.formatStatus(this.props.status)}</strong></p>
-    //                     </div>
-    //
-    //                     <div className="image-action">
-    //                         <button className="btn btn-outline-primary mr-1"
-    //                                 onClick={this.props.onUploadClick}>Upload
-    //                         </button>
-    //                         <button className="btn btn-outline-dark" onClick={this.props.onRemoveClick}>Remove
-    //                         </button>
-    //                     </div>
-    //                 </div>
-    //             </div>
-    //         </div>
-    //     );
-    // }
+
+    constructor(props) {
+        super(props);
+        this.state = {
+            fileIdx: 0
+        }
+
+    }
+
+    copyToClipboard = (text) => {
+        const textField = document.createElement('textarea');
+        textField.innerText = text;
+        document.body.appendChild(textField);
+        textField.select();
+        document.execCommand('copy');
+        textField.remove()
+    };
 
     render() {
 
         const hasFiles = this.props.files.length > 0;
-        const small = this.props.files[0];
+
+        let download, small, currentFile;
+        if (hasFiles) {
+            small = this.props.files[0];
+            currentFile = this.props.files[this.state.fileIdx];
+
+            if (currentFile) {
+                const currentUrl = currentFile.url;
+                download = (
+                    <div className="card border-dark">
+                        <div className="card-body">
+                            <p>select file size: {
+                                this.props.files.map((file, fileIdx) => {
+                                    const isOriginal = (fileIdx === this.props.files.length - 1);
+                                    return <button
+                                        onClick={() => this.setState({fileIdx})}
+                                        key={[this.props.name, fileIdx].join('_')}
+                                        className={["btn btn-sm mr-1",
+                                            isOriginal ? "btn-outline-dark" : "btn-outline-primary",
+                                            fileIdx === this.state.fileIdx ? "active" : ""].join(" ")}
+                                    >{file.id}</button>
+                                })
+                            }
+                            </p>
+                            <p>
+                                filename: <strong>{currentFile.name}</strong>
+                            </p>
+                            <p>
+                                size: <strong>{ImageRow.formatSize(currentFile.size)}</strong>
+                            </p>
+                            <p>
+                                url: <a href={currentFile.url} download={currentFile.name}>{currentUrl}</a>
+                            </p>
+                            <p>
+                                <button className="btn btn-sm btn-primary mr-1"
+                                        onClick={() => this.copyToClipboard(currentUrl)}>copy url
+                                </button>
+                                <button className="btn btn-sm btn-primary mr-1">download</button>
+                                <button className="btn btn-sm btn-primary">preview</button>
+                            </p>
+                        </div>
+                    </div>
+                )
+            }
+        }
+
 
         return (
             <div className="row image-row">
                 <div className="media">
 
-                    <img className="align-self-center mr-3" src={hasFiles ? small.url : this.props.src}
-                         alt={hasFiles ? small.name : this.props.name}/>
+                    <img className="align-self-center mr-3" src={small ? small.url : this.props.src}
+                         alt={small ? small.name : this.props.name}/>
 
                     <div className="media-body ">
                         <div className="image-info">
-                            <p>filename: <strong>{this.props.name}</strong></p>
-                            <p>status: <strong>{ImageRow.formatStatus(this.props.status)}</strong></p>
+                            <p>name: <strong>{this.props.name}</strong></p>
+                            <p hidden={!this.props.status || !this.props.status.length}>
+                                status: <strong>{ImageRow.formatStatus(this.props.status)}</strong>
+                            </p>
                         </div>
-
                         <div className="image-download" hidden={this.props.hideDownloadDiv}>
-                            <p>download:</p>
-                            <div>
-                                {
-                                    this.props.files.map((file, idx) => {
-                                        const isOriginal = (idx === this.props.files.length - 1);
-                                        return <a href={file.url}
-                                                  download={this.props.name}
-                                                  className={["btn", "mr-1", isOriginal ? "btn-outline-dark" : "btn-outline-primary"].join(" ")}
-                                                  key={[this.props.name, idx].join('_')}>{file.id}</a>
-                                    })
-                                }
-                            </div>
+                            {download}
                         </div>
 
                         <div className="image-action">
@@ -106,12 +132,6 @@ class ImageRow extends Component {
 }
 
 ImageRow.propTypes = {
-    // size: PropTypes.number,
-    // type: PropTypes.string,
-    // lastModifiedDate: PropTypes.instanceOf(Date),
-    // lastModified: PropTypes.number,
-    // isUploaded: PropTypes.bool,
-
     src: PropTypes.string,
     name: PropTypes.string,
     onDeleteClick: PropTypes.func,
@@ -121,15 +141,14 @@ ImageRow.propTypes = {
 };
 
 ImageRow.defaultProps = {
-    // lastModifiedDate: new Date(),
-    // isUploaded: false,
-
     src: '',
-    name: 'NO NAME',
+    name: '',
     status: '',
+
     hideUploadBtn: false,
     hideRemoveBtn: false,
     hideDownloadDiv: false,
+
     files: [],
     onRemoveClick: () => console.log('onDeleteClick'),
     onUploadClick: () => console.log('onUploadClick')
