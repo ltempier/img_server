@@ -39,70 +39,91 @@ const upload = multer({
     // }
 });
 
-app.post('/images', upload.any(), function (req, res, next) {
-    req.files = req.files || [];
-    req.query.sizes = (req.query.sizes || "").split(",").map((size) => parseInt(size));
+function checkRedirect(req, res, next) {
+    try {
+        req.query.redirect = parseInt(req.query.redirect || 0)
+    } catch (e) {
+        req.query.redirect = 0
+    }
+
+    if (req.query.redirect > 2)
+        return res.status(500).send('Too many redirection');
+
+    req.query.redirect += 1;
     next()
-}, function (req, res) {
+}
 
-    let response = [];
+app.route('/images')
+    .post(upload.any(), function (req, res, next) {
+        req.files = req.files || [];
+        req.query.sizes = (req.query.sizes || "").split(",").map((size) => parseInt(size));
+        next()
+    }, function (req, res) {
+        let response = [];
+        async.eachLimit(req.files, 1, function (file, nextFile) {
 
-    async.eachLimit(req.files, 1, function (file, nextFile) {
+            const tmpFile = new File(file);
+            const tree = new Tree();
 
-        const tmpFile = new File(file);
-        const tree = new Tree();
+            async.auto({
+                hash: function (cb) {
+                    tmpFile.getHash(cb, true)
+                },
+                image: ['hash', function (results, callback) {
+                    const image = new Image({
+                        hash: results.hash,
+                        name: tmpFile.name
+                    });
 
-        async.auto({
-            hash: function (cb) {
-                tmpFile.getHash(cb, true)
-            },
-            image: ['hash', function (results, callback) {
-                const image = new Image({
-                    hash: results.hash,
-                    name: tmpFile.name
-                });
-
-                async.series({
-                    convert: function (cb) {
-                        async.eachLimit(req.query.sizes, 3, (sizeKb, nextSize) => {
-                            if (tmpFile.size <= sizeKb * 1000)
-                                return nextSize();
-                            image.convert(tmpFile, sizeKb, nextSize)
-                        }, cb)
-                    },
-                    move: function (cb) {
-                        const dirPath = path.join(config.dirFilePath, results.hash);
-                        const filepath = path.join(dirPath, tmpFile.name);
-                        tmpFile.moveTo(filepath, (err, originalFile) => {
-                            if (err)
-                                cb(err);
-                            else {
-                                image.files["original"] = originalFile;
-                                cb()
-                            }
-                        })
-                    },
-                    save: function (cb) {
-                        tree.loadHash(results.hash);
-                        cb()
-                    }
-                }, (err) => callback(err, image))
-            }],
-            end: ['hash', 'image', function (results, callback) {
-                response.push(tree.get(results.hash));
-                callback()
-            }]
-        }, nextFile)
-    }, function (err) {
-        if (err)
-            res.status(500).json(err);
-        else if (req.files.length === 0)
-            res.sendStatus(400);
-        else {
-            res.status(200).json(response)
-        }
+                    async.series({
+                        convert: function (cb) {
+                            async.eachLimit(req.query.sizes, 3, (sizeKb, nextSize) => {
+                                if (tmpFile.size <= sizeKb * 1000)
+                                    return nextSize();
+                                image.convert(tmpFile, sizeKb, nextSize)
+                            }, cb)
+                        },
+                        move: function (cb) {
+                            const dirPath = path.join(config.dirFilePath, results.hash);
+                            const filepath = path.join(dirPath, tmpFile.name);
+                            tmpFile.moveTo(filepath, (err, originalFile) => {
+                                if (err)
+                                    cb(err);
+                                else {
+                                    image.files["original"] = originalFile;
+                                    cb()
+                                }
+                            })
+                        },
+                        save: function (cb) {
+                            tree.loadHash(results.hash);
+                            cb()
+                        }
+                    }, (err) => callback(err, image))
+                }],
+                end: ['hash', 'image', function (results, callback) {
+                    response.push(tree.get(results.hash));
+                    callback()
+                }]
+            }, nextFile)
+        }, function (err) {
+            if (err)
+                res.status(500).json(err);
+            else if (req.files.length === 0)
+                res.sendStatus(400);
+            else {
+                res.status(200).json(response)
+            }
+        })
     })
-});
+    .get(function (req, res) {
+        const tree = new Tree();
+        const all = tree.all();
+        if (all)
+            res.status(200).json(all);
+        else
+            res.status(404).send('Not Found')
+    });
 
 app.get('/images/:hash', checkRedirect, function (req, res) {
     const tree = new Tree();
@@ -162,47 +183,6 @@ app.get('/images/:hash/:size/:name', checkRedirect, function (req, res) {
     else
         res.status(404).send('Not Found')
 });
-
-function checkRedirect(req, res, next) {
-    try {
-        req.query.redirect = parseInt(req.query.redirect || 0)
-    } catch (e) {
-        req.query.redirect = 0
-    }
-
-    if (req.query.redirect > 2)
-        return res.status(500).send('Too many redirection');
-
-    req.query.redirect += 1;
-    next()
-}
-
-
-const api = express.Router();
-api.use(function (req, res, next) {
-    next()
-});
-
-api.get(Image.getUrl(), function (req, res) {
-    const tree = new Tree();
-    const all = tree.all();
-    if (all)
-        res.status(200).json(all);
-    else
-        res.status(404).send('Not Found')
-});
-
-api.get(Image.getUrl(':hash'), function (req, res) {
-    const tree = new Tree();
-    const image = tree.get(req.params.hash);
-
-    if (image)
-        res.status(200).json(image);
-    else
-        res.status(404).send('Not Found')
-});
-
-app.use('/api', api);
 
 app.get('*', (req, res) => {
     res.sendFile(path.resolve(__dirname, '..', 'client-react', 'build', 'index.html'));

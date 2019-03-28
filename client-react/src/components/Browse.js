@@ -8,11 +8,13 @@ class Browse extends Component {
         super(props);
         this.state = {
             images: []
-        }
+        };
+
+        this.deleteFile = this.deleteFile.bind(this)
     }
 
     componentDidMount() {
-        fetch('/api/images')
+        fetch('/images')
             .then((response) => {
                 return response.json();
             })
@@ -24,14 +26,34 @@ class Browse extends Component {
             });
     }
 
+    deleteFile(hash, size) {
+        fetch(`/images/${hash}/${size}`, {method: 'delete'})
+            .then(() => {
+                this.setState((state) => {
+                    return {
+                        ...state,
+                        images: state.images.map(function (image) {
+                            if (image.hash === hash) {
+                                image.files = image.files.filter(function (file) {
+                                    return file.id !== size
+                                })
+                            }
+                            return image
+                        })
+                    }
+                });
+            })
+            .catch((error) => {
+                console.log('error', error)
+            });
+    }
+
     render() {
         return (
             <div className="container mt-5">
 
-
                 {
                     this.state.images.map((image, idx) => {
-
                         return (
                             <ImageRow
                                 key={idx}
@@ -43,10 +65,10 @@ class Browse extends Component {
 
                                 hideUploadBtn={true}
                                 hideRemoveBtn={true}
-                                status=""
+
+                                onDeleteClick={(size) => this.deleteFile(image.hash, size)}
                             />
                         )
-
                     })
                 }
 

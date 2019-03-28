@@ -274,11 +274,9 @@ class Upload extends Component {
                                 </button>
                             </div>
 
-
                         </div>
                     </div>
                 </div>
-
 
                 <div id="files" className="col-12">
                     {

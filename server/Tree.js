@@ -62,7 +62,10 @@ class Store {
             }
         });
 
-        this.images[hash] = image
+        if (Object.keys(image.files).length)
+            this.images[hash] = image;
+        else
+            fs.removeSync(imageDirPath)
     }
 
     all() {

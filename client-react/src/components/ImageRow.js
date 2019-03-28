@@ -13,7 +13,7 @@ class ImageRow extends Component {
         }
     }
 
-    copyToClipboard = (text) => {
+    copyToClipboard(text) {
         const textField = document.createElement('textarea');
         textField.innerText = text;
         document.body.appendChild(textField);
@@ -22,13 +22,16 @@ class ImageRow extends Component {
         textField.remove()
     }
 
+    download() {
+
+    }
+
     render() {
 
         const hasFiles = this.props.files.length > 0;
+        let download, currentFile;
 
-        let download, small, currentFile;
         if (hasFiles) {
-            small = this.props.files[0];
             currentFile = this.props.files[this.state.fileIdx];
 
             if (currentFile) {
@@ -41,32 +44,22 @@ class ImageRow extends Component {
                             {
                                 this.props.files.map((file, fileIdx) => {
 
-                                    return <li className="nav-item " key={[this.props.name, fileIdx].join('_')}>
-                                        <a
-                                            onClick={() => this.setState({fileIdx})}
-                                            className={["nav-link",
-                                                fileIdx === this.state.fileIdx ? "active" : ""].join(" ")}
-                                            href="#!">{file.id}</a>
-                                    </li>
-
-                                    // const isOriginal = (fileIdx === this.props.files.length - 1);
-                                    // return <button
-                                    //     onClick={() => this.setState({fileIdx})}
-                                    //     key={[this.props.name, fileIdx].join('_')}
-                                    //     className={["btn btn-sm mr-1",
-                                    //         isOriginal ? "btn-outline-dark" : "btn-outline-primary",
-                                    //         fileIdx === this.state.fileIdx ? "active" : ""].join(" ")}
-                                    // >v</button>
+                                    return (
+                                        <li className="nav-item " key={[this.props.name, fileIdx].join('_')}>
+                                            <a onClick={() => this.setState({fileIdx})}
+                                               className={[
+                                                   "nav-link",
+                                                   fileIdx === this.state.fileIdx ? "active" : ""
+                                               ].join(" ")}
+                                               href="#!">{file.id}</a>
+                                        </li>
+                                    )
                                 })
                             }
                         </ul>
                         <div className="card border-top-0 radius-0">
 
                             <div className="card-body">
-                                {/*<p>select file size: */}
-                                {/*</p>*/}
-
-
                                 <p>
                                     filename: <strong>{currentFile.name}</strong>
                                 </p>
@@ -81,8 +74,11 @@ class ImageRow extends Component {
                                             onClick={() => this.copyToClipboard(currentUrl)}>copy url
                                     </button>
                                     <button className="btn btn-sm btn-primary mr-1">download</button>
-                                    <button className="btn btn-sm btn-primary">preview</button>
-                                    <button className="btn btn-sm btn-primary">preview</button>
+                                    {/*<button className="btn btn-sm btn-dark mr-1">preview</button>*/}
+                                    <button className="btn btn-sm btn-danger"
+                                            hidden={!this.props.onDeleteClick}
+                                            onClick={() => this.props.onDeleteClick(currentFile.id)}>delete
+                                    </button>
                                 </p>
                             </div>
                         </div>
@@ -96,8 +92,9 @@ class ImageRow extends Component {
             <div className="row image-row">
                 <div className="media">
 
-                    <img className="align-self-center mr-3" src={small ? small.url : this.props.src}
-                         alt={small ? small.name : this.props.name}/>
+                    <img className="align-self-center mr-3"
+                         src={currentFile ? currentFile.url : this.props.src}
+                         alt={currentFile ? currentFile.name : this.props.name}/>
 
                     <div className="media-body ">
                         <div className="image-info">
@@ -111,10 +108,12 @@ class ImageRow extends Component {
                         </div>
 
                         <div className="image-action">
-                            <button hidden={this.props.hideUploadBtn} className="btn btn-outline-primary mr-1"
+                            <button hidden={this.props.hideUploadBtn || !this.props.onUploadClick}
+                                    className="btn btn-outline-primary mr-1"
                                     onClick={this.props.onUploadClick}>Upload
                             </button>
-                            <button hidden={this.props.hideRemoveBtn} className="btn btn-outline-dark"
+                            <button hidden={this.props.hideRemoveBtn || !this.props.onRemoveClick}
+                                    className="btn btn-outline-dark mr-1"
                                     onClick={this.props.onRemoveClick}>Remove
                             </button>
                         </div>
@@ -169,9 +168,9 @@ ImageRow.defaultProps = {
     hideDownloadDiv: false,
 
     files: [],
-    onRemoveClick: () => console.log('onDeleteClick'),
-    onUploadClick: () => console.log('onUploadClick'),
-    onDeleteFileClick: () => console.log('onDeleteFileClick')
+    onRemoveClick: null,
+    onUploadClick: null,
+    onDeleteFileClick: null
 };
 
 export default ImageRow;
