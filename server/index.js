@@ -59,12 +59,12 @@ app.route('/images')
         req.query.sizes = (req.query.sizes || "").split(",").map((size) => parseInt(size));
         next()
     }, function (req, res) {
+
         let response = [];
-        async.eachLimit(req.files, 1, function (file, nextFile) {
+        const tree = new Tree();
 
+        async.eachLimit(req.files, 2, function (file, nextFile) {
             const tmpFile = new File(file);
-            const tree = new Tree();
-
             async.auto({
                 hash: function (cb) {
                     tmpFile.getHash(cb, true)
@@ -78,9 +78,11 @@ app.route('/images')
                     async.series({
                         convert: function (cb) {
                             async.eachLimit(req.query.sizes, 3, (sizeKb, nextSize) => {
-                                if (tmpFile.size <= sizeKb * 1000)
-                                    return nextSize();
-                                image.convert(tmpFile, sizeKb, nextSize)
+                                Image.convert(tmpFile, sizeKb, (err) => {
+                                    if (err)
+                                        console.log(err.message);
+                                    nextSize()
+                                })
                             }, cb)
                         },
                         move: function (cb) {
@@ -116,11 +118,23 @@ app.route('/images')
             }
         })
     })
-    .get(function (req, res) {
+    .get(function (req, res, next) {
+        req.query = req.query || {};
+        req.query.sortBy = req.query.sortBy || "timestamp";
+        req.query.sort = req.query.sort || "desc";
+        req.query.limit = parseInt(req.query.limit || 0);
+        req.query.from = parseInt(req.query.from || 0);
+        next()
+    }, function (req, res) {
         const tree = new Tree();
-        const all = tree.all();
-        if (all)
+        let all = tree.all(req.query.sortBy, req.query.sort === "asc" ? 1 : -1);
+        if (all) {
+            if (req.query.from && !isNaN(req.query.from))
+                all = all.slice(req.query.from);
+            if (req.query.limit && !isNaN(req.query.limit))
+                all = all.slice(0, req.query.limit);
             res.status(200).json(all);
+        }
         else
             res.status(404).send('Not Found')
     });
@@ -142,7 +156,6 @@ app.route('/images/:hash/:size')
     .get(checkRedirect, function (req, res) {
         const tree = new Tree();
         const image = tree.get(req.params.hash);
-
         if (image) {
             if (image.files[req.params.size])
                 res.redirect(urlLib.format({

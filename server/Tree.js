@@ -39,28 +39,34 @@ class Store {
         let image = new Image({hash});
         const imageDirPath = path.join(config.dirFilePath, hash);
 
-        fs.readdirSync(imageDirPath).forEach((filename) => {
+        if (fs.existsSync(imageDirPath)) {
+            fs.readdirSync(imageDirPath).forEach((filename) => {
+                const filepath = path.join(imageDirPath, filename);
+                const stat = fs.statSync(filepath);
+                if (stat.isFile()) {
+                    if (!image.originalName)
+                        image.originalName = filename.replace(/^\d+kb_/, '');
+                    if (!image.timestamp)
+                        image.timestamp = stat.ctimeMs;
 
-            const filepath = path.join(imageDirPath, filename);
-            const stat = fs.statSync(filepath);
-            if (stat.isFile()) {
+                    let convert = filename.match(/^((\d*)kb)_/);
 
-                if (!image.originalName)
-                    image.originalName = filename.replace(/^\d+kb_/, '');
+                    if (convert && convert.length === 3)
+                        convert = convert[1];
+                    else {
+                        convert = "original";
+                        image.originalName = filename;
+                        image.timestamp = stat.ctimeMs
+                    }
 
-                let convert = filename.match(/^((\d*)kb)_/);
-                if (convert && convert.length === 3)
-                    convert = convert[1];
-                else
-                    convert = "original";
-
-                image.files[convert] = new File({
-                    path: filepath,
-                    filename: filename,
-                    size: stat.size
-                })
-            }
-        });
+                    image.files[convert] = new File({
+                        path: filepath,
+                        filename: filename,
+                        size: stat.size
+                    })
+                }
+            });
+        }
 
         if (Object.keys(image.files).length)
             this.images[hash] = image;
@@ -68,8 +74,17 @@ class Store {
             fs.removeSync(imageDirPath)
     }
 
-    all() {
-        return Object.values(this.images)
+    all(sortKey, factor) {
+        let images = Object.values(this.images);
+        if (sortKey)
+            return images.sort(function (a, b) {
+                try {
+                    return (factor || 1) * (a[sortKey] - b[sortKey])
+                } catch (e) {
+                    return 0
+                }
+            });
+        return images
     }
 
     get(hash) {

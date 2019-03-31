@@ -2,7 +2,6 @@
 
 const path = require('path');
 const fs = require('fs-extra');
-const _ = require('lodash');
 const async = require('async');
 const im = require('imagemagick');
 
@@ -22,16 +21,15 @@ class Image {
         this.files = {};
     }
 
-
     toJSON() {
 
         const url = Image.getUrl(this.hash);
-        const files = Object.keys(this.files).map((sizeKb) => {
-            const file = this.files[sizeKb];
+        const files = Object.keys(this.files).map((sizeName) => {
+            const file = this.files[sizeName];
             return {
                 ...file.toJSON(),
-                id: sizeKb,
-                url: Image.getUrl(this.hash, sizeKb, file.name)
+                id: sizeName,
+                url: Image.getUrl(this.hash, sizeName, file.name)
             }
         }).sort(function (a, b) {
             return a.size - b.size;
@@ -45,13 +43,16 @@ class Image {
         }
     }
 
-    convert(from, sizeKb, callback) {
+    static convert(from, sizeKb, callback) {
 
-        if (!this.hash)
+        if (!from.hash)
             return callback(new Error('no hash'));
 
-        const dirPath = path.join(config.dirFilePath, this.hash);
-        const filename = path.join(sizeKb + 'kb_' + this.originalName); //WARNING: check Tree.loadHash regex
+        if (from.size <= sizeKb * 1000)
+            return callback();
+
+        const dirPath = path.join(config.dirFilePath, from.hash);
+        const filename = path.join(sizeKb + 'kb_' + from.name); //WARNING: check Tree.loadHash regex
 
         const filepath = path.join(dirPath, filename);
 
@@ -68,7 +69,6 @@ class Image {
                 const exist = fs.existsSync(filepath);
                 if (exist)
                     return cb(null, false);
-
                 im.convert([
                         from.path,
                         '-define', 'jpeg:extent=' + sizeKb + 'kb',
@@ -83,19 +83,20 @@ class Image {
                         }
                     })
             }],
-            // hash: ['convert',  (res, cb) =>  file.getHash(cb, true)],
             size: ['convert', (res, cb) => file.getSize(cb, true)],
+            checkResult: ['size', (res, cb) => {
+                const errorFactor = 1.2;
+                if (res.convert && res.size > (errorFactor * sizeKb * 1000))
+                    cb(new Error(`error resize file ${from.name} - ask ${sizeKb}kb get ${parseInt(res.size / 1000)}kb`));
+                else
+                    cb()
+            }]
         }, (err) => {
             if (err)
-                callback(err);
-            else {
-                this.files[sizeKb] = (file);
-                callback(null, file)
-            }
+                fs.removeSync(file.path);
+            callback(err)
         })
     }
-
 }
-
 
 module.exports = Image;

@@ -62,7 +62,9 @@ class File {
 
     getSize(callback, force) {
         if (_.isFunction(callback))
-            callback(null, this.getSize());
+            return callback(null, this.getSize(force));
+
+        force = callback;
 
         if (this.size && !(force === true))
             return this.size;

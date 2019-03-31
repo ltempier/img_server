@@ -22,10 +22,6 @@ class ImageRow extends Component {
         textField.remove()
     }
 
-    download() {
-
-    }
-
     render() {
 
         const hasFiles = this.props.files.length > 0;
@@ -43,7 +39,6 @@ class ImageRow extends Component {
                         <ul className="nav nav-tabs">
                             {
                                 this.props.files.map((file, fileIdx) => {
-
                                     return (
                                         <li className="nav-item " key={[this.props.name, fileIdx].join('_')}>
                                             <a onClick={() => this.setState({fileIdx})}
@@ -58,7 +53,6 @@ class ImageRow extends Component {
                             }
                         </ul>
                         <div className="card border-top-0 radius-0">
-
                             <div className="card-body">
                                 <p>
                                     filename: <strong>{currentFile.name}</strong>
@@ -73,8 +67,10 @@ class ImageRow extends Component {
                                     <button className="btn btn-sm btn-primary mr-1"
                                             onClick={() => this.copyToClipboard(currentUrl)}>copy url
                                     </button>
-                                    <button className="btn btn-sm btn-primary mr-1">download</button>
-                                    {/*<button className="btn btn-sm btn-dark mr-1">preview</button>*/}
+                                    <a className="btn btn-sm btn-primary mr-1"
+                                       href={currentFile.url}
+                                       download={currentFile.name}>download</a>
+
                                     <button className="btn btn-sm btn-danger"
                                             hidden={!this.props.onDeleteClick}
                                             onClick={() => this.props.onDeleteClick(currentFile.id)}>delete

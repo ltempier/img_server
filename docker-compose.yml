@@ -5,7 +5,7 @@ services:
     environment:
     - IP=0.0.0.0
     - PORT=1337
-#    volumes:
-#    - ./files:/usr/src/files
+    volumes:
+    - ./files:/usr/src/files
     ports:
     - 0.0.0.0:1234:1337

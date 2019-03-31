@@ -2,14 +2,14 @@ import React, {Component} from 'react';
 
 import ImageRow from './ImageRow';
 
-let storeImages = null;
+let savedState = null;
 
 class Upload extends Component {
 
     constructor(props) {
         super(props);
-        this.state = {
-            images: storeImages || [],
+        this.state = savedState || {
+            images: [],
             sizes: [2000]
         };
 
@@ -25,7 +25,7 @@ class Upload extends Component {
     }
 
     componentWillUnmount() {
-        storeImages = this.state.images;
+        savedState = this.state;
     }
 
     indexOf(imageId) {
@@ -99,7 +99,7 @@ class Upload extends Component {
                             ...response[0],
                             status: 'Uploaded',
                             hideUploadBtn: true,
-                            hideRemoveBtn: true
+                            hideRemoveBtn: false
                         });
                     }).then((response) => {
                         resolve(response)
@@ -165,9 +165,6 @@ class Upload extends Component {
                             id: imageId,
                             name: image.name,
                             size: image.size,
-                            // type: image.type,
-                            // lastModified: image.lastModified,
-                            // lastModifiedDate: image.lastModifiedDate,
                             uri: URL.createObjectURL(image),
                             status: 'not processed',
                             hideDownloadDiv: true
