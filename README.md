@@ -1,19 +1,22 @@
 # description
 
 I developed this project because I wanted to share heavy pictures (>5Mb) on my travel blog.
+
 img_server allows to upload and resize pictures at a convenient size for a website via an HTTP API.
 Also I developed an interface to manage all the uploaded files.
 
+TODO:
+- eject react to have one project (1 package.json ...)
+- auth for upload and delete
+- better design
+- group images (albums)
 
 # deploy
-
 
 ```
 docker-compose up -d img_server
 ```
-
 > show Dockerfile for deploy instructions
-
 
 # server API
 
