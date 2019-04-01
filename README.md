@@ -1,9 +1,8 @@
 # description
 
-I want to share heavy pictures (>5Mb) on my travel blog so I developped this project.
-
-img_server allows me to upload and resize pictures at a convenient size for a website via an HTTP API.
-Also I developed an interface to manage all my uploaded files.
+I developed this project because I wanted to share heavy pictures (>5Mb) on my travel blog.
+img_server allows to upload and resize pictures at a convenient size for a website via an HTTP API.
+Also I developed an interface to manage all the uploaded files.
 
 
 # deploy
