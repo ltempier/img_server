@@ -8,7 +8,7 @@ npm run docker-build
 npm run docker-run
 ```
 
-#### docker-compose`
+#### docker-compose
 ```
 docker-compose up -d img_server
 ```
@@ -74,7 +74,16 @@ FormData: {
 
 ## client
 
-![browse screenshot](https://raw.githubusercontent.com/ltempier/img_server/master/screenshot/browse_31-03-2019.png)
+#####  screen  upload
+
+- description: upload form
+
 ![upload screenshot](https://raw.githubusercontent.com/ltempier/img_server/master/screenshot/upload_31-03-2019.png)
 
+
+#####  screen  browse
+
+- description: list images from server
+
+![browse screenshot](https://raw.githubusercontent.com/ltempier/img_server/master/screenshot/browse_31-03-2019.png)
 
