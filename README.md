@@ -1,14 +1,25 @@
-## deploy
+# description
+
+Because I want to share heavy pictures (>5Mb) on internet on my traveling blog I develop this project.
+img_server allowed me to upload pictures and resize then at a convenient size for a website via an HTTP API.
+Also I develop a client-app for manage all my images files.
+
+
+# deploy
+
 
 ```
 docker-compose up -d img_server
 ```
 
-## server API
+> show Dockerfile for deploy instructions
 
-##### POST /images
 
-- description: upload image file on server
+# server API
+
+#### POST /images
+
+- description: upload image file on server and resize image
 - body:
 ```
 FormData: {
@@ -17,7 +28,7 @@ FormData: {
 }
 ```
 
-#####  GET /images
+####  GET /images
 - description: list images on server
 - query:
 ```
@@ -54,22 +65,22 @@ FormData: {
 ]
 ```
 
-#####  GET  /images/{hash}
+####  GET  /images/{hash}
 
-- description: download original file (if exist)
+- description: download original image file specified by hash (if exist)
 
-#####  GET  /images/{hash}/{size}
+####  GET  /images/{hash}/{size}
 
-- description: download file with specified size (if exist)
+- description: download image file specified by hash and size (if exist)
 
-#####  DELETE  /images/{hash}/{size}
+####  DELETE  /images/{hash}/{size}
 
-- description: delete 
+- description: delete image file specified by hash and size
 
 
-## client
+# client
 
-#####  upload screen 
+####  upload screen 
 
 - description: upload form
 
@@ -77,7 +88,7 @@ FormData: {
 ![upload screenshot](https://raw.githubusercontent.com/ltempier/img_server/master/screenshot/upload_31-03-2019.png)
 
 
-#####  browse screen 
+####  browse screen 
 
 - description: list images from server
 

@@ -19,12 +19,6 @@ const Tree = require('./Tree');
 
 const app = express();
 
-app.use(function (req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    next();
-});
-
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(morgan(":date[iso] - :method :url :status - :response-time ms"));
@@ -33,11 +27,23 @@ app.use(express.static(path.resolve(__dirname, '..', 'client-react', 'build')));
 
 const upload = multer({
     dest: config.dirTmpPath,
-    // fileFilter: function (req, file, cb) {
-    // TODO filter -> only image files
-    //     cb(null, true)
-    // }
+    fileFilter: function (req, file, cb) {
+        // TODO filter -> only image files
+        cb(null, true)
+    }
 });
+
+
+function noCorsOrigin(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
+}
+
+function security(req, res, next) {
+    // TODO auth logic
+    next()
+}
 
 function checkRedirect(req, res, next) {
     try {
@@ -46,7 +52,7 @@ function checkRedirect(req, res, next) {
         req.query.redirect = 0
     }
 
-    if (req.query.redirect > 2)
+    if (req.query.redirect > 5)
         return res.status(500).send('Too many redirection');
 
     req.query.redirect += 1;
@@ -54,7 +60,7 @@ function checkRedirect(req, res, next) {
 }
 
 app.route('/images')
-    .post(upload.any(), function (req, res, next) {
+    .post(security, upload.any(), function (req, res, next) {
         req.files = req.files || [];
         req.body.sizes = (req.body.sizes || "").split(",").map((size) => parseInt(size));
         next()
@@ -139,7 +145,7 @@ app.route('/images')
             res.status(404).send('Not Found')
     });
 
-app.get('/images/:hash', checkRedirect, function (req, res) {
+app.get('/images/:hash', noCorsOrigin, checkRedirect, function (req, res) {
     const tree = new Tree();
     const image = tree.get(req.params.hash);
     if (image)
@@ -153,7 +159,7 @@ app.get('/images/:hash', checkRedirect, function (req, res) {
 
 
 app.route('/images/:hash/:size')
-    .get(checkRedirect, function (req, res) {
+    .get(noCorsOrigin, checkRedirect, function (req, res) {
         const tree = new Tree();
         const image = tree.get(req.params.hash);
         if (image) {
@@ -171,7 +177,7 @@ app.route('/images/:hash/:size')
         else
             res.status(404).send('Not Found')
     })
-    .delete(function (req, res) {
+    .delete(security, function (req, res) {
         const tree = new Tree();
         const done = tree.delete(req.params.hash, req.params.size);
         if (done)
@@ -180,7 +186,7 @@ app.route('/images/:hash/:size')
             res.status(404).send('Not Found')
     });
 
-app.get('/images/:hash/:size/:name', checkRedirect, function (req, res) {
+app.get('/images/:hash/:size/:name', noCorsOrigin, checkRedirect, function (req, res) {
     const tree = new Tree();
     const image = tree.get(req.params.hash);
 
