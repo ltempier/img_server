@@ -74,16 +74,18 @@ FormData: {
 
 ## client
 
-#####  screen  upload
+#####  upload screen 
 
 - description: upload form
 
+- screenshot: 
 ![upload screenshot](https://raw.githubusercontent.com/ltempier/img_server/master/screenshot/upload_31-03-2019.png)
 
 
-#####  screen  browse
+#####  browse screen 
 
 - description: list images from server
 
+- screenshot: 
 ![browse screenshot](https://raw.githubusercontent.com/ltempier/img_server/master/screenshot/browse_31-03-2019.png)
 
