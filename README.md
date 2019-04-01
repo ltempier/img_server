@@ -1,14 +1,5 @@
-
 ## deploy
 
-#### docker
-
-```
-npm run docker-build
-npm run docker-run
-```
-
-#### docker-compose
 ```
 docker-compose up -d img_server
 ```
@@ -70,6 +61,10 @@ FormData: {
 #####  GET  /images/{hash}/{size}
 
 - description: download file with specified size (if exist)
+
+#####  DELETE  /images/{hash}/{size}
+
+- description: delete 
 
 
 ## client
