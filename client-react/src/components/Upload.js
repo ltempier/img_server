@@ -86,9 +86,9 @@ class Upload extends Component {
                 .then((blob) => {
                     let formData = new FormData();
                     formData.append('image', blob, image.name);
+                    formData.append('sizes', this.state.sizes);
 
-                    const url = '/images?sizes=' + encodeURIComponent(this.state.sizes.join(','));
-                    fetch(url, {
+                    fetch('/images', {
                         method: 'POST',
                         body: formData
                     }).then((response) => {
@@ -280,6 +280,7 @@ class Upload extends Component {
                         this.state.images.map((image, idx) => {
                             return (
                                 <ImageRow {...image}
+                                          name={image.originalName}
                                           src={image.uri}
                                           key={'image_' + idx}
 

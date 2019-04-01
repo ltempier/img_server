@@ -15,10 +15,10 @@ class Browse extends Component {
 
     componentDidMount() {
         const query = {
-            sortBy: 'timestamp',
+            // sortBy: 'timestamp',
+            // from: 0,
             sort: 'desc',
-            limit: 100,
-            from: 0
+            limit: 100
         };
 
         fetch('/images?' + Object.keys(query).map((key) => [key, encodeURIComponent(query[key])].join('=')).join('&'))

@@ -44,8 +44,10 @@ class Store {
                 const filepath = path.join(imageDirPath, filename);
                 const stat = fs.statSync(filepath);
                 if (stat.isFile()) {
+
                     if (!image.originalName)
                         image.originalName = filename.replace(/^\d+kb_/, '');
+
                     if (!image.timestamp)
                         image.timestamp = stat.ctimeMs;
 
@@ -58,6 +60,8 @@ class Store {
                         image.originalName = filename;
                         image.timestamp = stat.ctimeMs
                     }
+
+                    console.log(filename)
 
                     image.files[convert] = new File({
                         path: filepath,

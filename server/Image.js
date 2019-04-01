@@ -29,7 +29,7 @@ class Image {
             return {
                 ...file.toJSON(),
                 id: sizeName,
-                url: Image.getUrl(this.hash, sizeName, file.name)
+                url: Image.getUrl(this.hash, sizeName)
             }
         }).sort(function (a, b) {
             return a.size - b.size;
@@ -38,7 +38,7 @@ class Image {
         return {
             hash: this.hash,
             originalName: this.originalName,
-            url,
+            originalUrl: url,
             files
         }
     }

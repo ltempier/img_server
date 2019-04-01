@@ -56,7 +56,7 @@ function checkRedirect(req, res, next) {
 app.route('/images')
     .post(upload.any(), function (req, res, next) {
         req.files = req.files || [];
-        req.query.sizes = (req.query.sizes || "").split(",").map((size) => parseInt(size));
+        req.body.sizes = (req.body.sizes || "").split(",").map((size) => parseInt(size));
         next()
     }, function (req, res) {
 
@@ -77,7 +77,7 @@ app.route('/images')
 
                     async.series({
                         convert: function (cb) {
-                            async.eachLimit(req.query.sizes, 3, (sizeKb, nextSize) => {
+                            async.eachLimit(req.body.sizes, 3, (sizeKb, nextSize) => {
                                 Image.convert(tmpFile, sizeKb, (err) => {
                                     if (err)
                                         console.log(err.message);
@@ -129,9 +129,9 @@ app.route('/images')
         const tree = new Tree();
         let all = tree.all(req.query.sortBy, req.query.sort === "asc" ? 1 : -1);
         if (all) {
-            if (req.query.from && !isNaN(req.query.from))
+            if (!isNaN(req.query.from) && req.query.from > 0)
                 all = all.slice(req.query.from);
-            if (req.query.limit && !isNaN(req.query.limit))
+            if (!isNaN(req.query.limit) && req.query.limit > 0)
                 all = all.slice(0, req.query.limit);
             res.status(200).json(all);
         }
@@ -186,7 +186,7 @@ app.get('/images/:hash/:size/:name', checkRedirect, function (req, res) {
 
     if (image) {
         if (image.files[req.params.size])
-            res.download(image.files[req.params.size].path, image.originalName);
+            res.download(image.files[req.params.size].path, req.params.name);
         else
             res.redirect(urlLib.format({
                 pathname: '/images/' + req.params.hash + '/original/' + image.originalName,

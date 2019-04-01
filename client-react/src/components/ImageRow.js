@@ -8,9 +8,7 @@ class ImageRow extends Component {
 
     constructor(props) {
         super(props);
-        this.state = {
-            fileIdx: 0
-        }
+        this.state = {fileIdx: 0}
     }
 
     copyToClipboard(text) {
@@ -40,7 +38,7 @@ class ImageRow extends Component {
                             {
                                 this.props.files.map((file, fileIdx) => {
                                     return (
-                                        <li className="nav-item " key={[this.props.name, fileIdx].join('_')}>
+                                        <li className="nav-item " key={[this.props.name, 'file', fileIdx].join('_')}>
                                             <a onClick={() => this.setState({fileIdx})}
                                                className={[
                                                    "nav-link",
