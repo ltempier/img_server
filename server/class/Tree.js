@@ -61,8 +61,6 @@ class Store {
                         image.timestamp = stat.ctimeMs
                     }
 
-                    console.log(filename)
-
                     image.files[convert] = new File({
                         path: filepath,
                         filename: filename,
@@ -74,8 +72,10 @@ class Store {
 
         if (Object.keys(image.files).length)
             this.images[hash] = image;
-        else
+        else {
+            delete this.images[hash];
             fs.removeSync(imageDirPath)
+        }
     }
 
     all(sortKey, factor) {

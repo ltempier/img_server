@@ -29,7 +29,7 @@ class ImageRow extends Component {
             currentFile = this.props.files[this.state.fileIdx];
 
             if (currentFile) {
-                const currentUrl = currentFile.url;
+                const currentUrl = window.location.origin + currentFile.url;
                 download = (
 
                     <div className="">
@@ -59,16 +59,17 @@ class ImageRow extends Component {
                                     size: <strong>{ImageRow.formatSize(currentFile.size)}</strong>
                                 </p>
                                 <p>
-                                    url: <a href={currentFile.url} download={currentFile.name}>{currentUrl}</a>
+                                    url: <a href={currentUrl} download={currentFile.name}>{currentUrl}</a>
                                 </p>
+
                                 <p>
                                     <button className="btn btn-sm btn-primary mr-1"
                                             onClick={() => this.copyToClipboard(currentUrl)}>copy url
                                     </button>
                                     <a className="btn btn-sm btn-primary mr-1"
-                                       href={currentFile.url}
-                                       download={currentFile.name}>download</a>
-
+                                       href={currentUrl}
+                                       download={currentFile.name}>download
+                                    </a>
                                     <button className="btn btn-sm btn-danger"
                                             hidden={!this.props.onDeleteClick}
                                             onClick={() => this.props.onDeleteClick(currentFile.id)}>delete

@@ -11,6 +11,11 @@ TODO:
 - better design
 - group images (albums)
 
+# env
+
+- node > v8
+- imagemagick 
+
 # deploy
 
 ```

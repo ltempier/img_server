@@ -60,7 +60,7 @@ function checkRedirect(req, res, next) {
 }
 
 app.route('/images')
-    .post(security, upload.any(), function (req, res, next) {
+    .post(noCorsOrigin, security, upload.any(), function (req, res, next) {
         req.files = req.files || [];
         req.body.sizes = (req.body.sizes || "").split(",").map((size) => parseInt(size));
         next()
@@ -204,6 +204,7 @@ app.get('/images/:hash/:size/:name', noCorsOrigin, checkRedirect, function (req,
 });
 
 app.get('*', (req, res) => {
+    console.log('*')
     res.sendFile(path.resolve(__dirname, '..', 'client-react', 'build', 'index.html'));
 });
 
