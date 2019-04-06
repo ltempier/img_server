@@ -1,7 +1,7 @@
 const fs = require("fs-extra");
 const path = require("path");
 
-const config = require('./config');
+const config = require('../config');
 const Image = require("./Image");
 const File = require("./File");
 

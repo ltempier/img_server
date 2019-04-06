@@ -13,9 +13,9 @@ const urlLib = require('url');
 
 const config = require('./config');
 
-const File = require('./File');
-const Image = require('./Image');
-const Tree = require('./Tree');
+const File = require('./class/File');
+const Image = require('./class/Image');
+const Tree = require('./class/Tree');
 
 const app = express();
 

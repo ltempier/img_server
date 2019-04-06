@@ -6,7 +6,7 @@ const async = require('async');
 const im = require('imagemagick');
 
 const File = require('./File');
-const config = require('./config');
+const config = require('../config');
 
 class Image {
 
